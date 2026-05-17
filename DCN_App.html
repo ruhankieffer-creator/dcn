@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>De Carro Novo — Consultoria</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Rajdhani:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+@font-face{font-family:'SuiGeneris';src:url('dcn_font.otf') format('opentype');}
+:root{--bg:#c8cdd5;--surf:#e8ecf0;--panel:#f5f7fa;--blue:#1a7fd4;--blue2:#2a9ef0;--tx:#0a0f1a;--tx2:#182030;--tx3:#2a3a50;--bld:#0d2a5e;--hdr:#1e2530;--nav:#252b36;--bdr:#b8c8dc;--gn:#0f5e30;--gnb:#d4f0e2;--yw:#7a5200;--ywb:#faeec8;--rd:#9a2010;--rdb:#fde8e4;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--tx);font-size:15px;min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{background:linear-gradient(135deg,#1a2030,#1e2530 60%,#1a2a3e);padding:0 22px;height:72px;display:flex;align-items:center;gap:16px;border-bottom:3px solid #1a4a8a;position:sticky;top:0;z-index:50}
+.logo-img{width:58px;height:58px;object-fit:contain;flex-shrink:0}
+.ht{font-family:'SuiGeneris',sans-serif;font-size:22px;color:#fff;letter-spacing:2px}
+.hs{font-size:12px;color:#90b8e0;font-weight:600;margin-top:2px}
+.hsp{flex:1}
+.hup{font-family:'DM Mono',monospace;font-size:10px;color:#7ab3f0;text-align:right;line-height:1.7}
+.hup b{color:#fff;font-size:12px}
+.hdr-actions{display:flex;align-items:center;gap:8px}
+.logout-btn{background:transparent;border:1px solid #4a6a90;color:#a0c8f0;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700;transition:all .15s}
+.logout-btn:hover{background:#c00;border-color:#c00;color:#fff}
+
+/* ── CLIENT BAR ── */
+.cbar{background:var(--nav);padding:9px 22px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:2px solid #161e2a}
+.cf{display:flex;flex-direction:column}
+.cl{font-size:10px;color:#7ab3f0;text-transform:uppercase;letter-spacing:.7px;font-weight:700}
+.cv{font-family:'SuiGeneris',sans-serif;font-size:15px;color:#fff}
+.sep{width:1px;height:28px;background:#3a4a60;flex-shrink:0}
+.cbtn{background:transparent;border:1.5px solid #4a6a90;color:#a0c8f0;padding:5px 14px;border-radius:7px;cursor:pointer;font-size:13px;font-family:'Rajdhani',sans-serif;font-weight:700;margin-left:auto;transition:all .15s}
+.cbtn:hover{background:#1a3050;color:#fff}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:var(--panel);border-radius:16px;padding:36px 32px;width:400px;max-width:100%;border:1px solid var(--bdr);box-shadow:0 12px 40px rgba(0,0,0,.2)}
+.login-logo{text-align:center;margin-bottom:24px}
+.login-logo img{width:80px;height:80px;object-fit:contain}
+.login-title{font-family:'SuiGeneris',sans-serif;font-size:22px;color:var(--bld);text-align:center;margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--tx3);text-align:center;margin-bottom:24px;font-weight:600}
+.err-box{background:var(--rdb);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--rd);margin-bottom:12px;font-weight:600;border:1px solid #f5c5c0;display:none}
+
+/* ── DASHBOARD ── */
+.dash-header{padding:20px 22px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.dash-title{font-family:'SuiGeneris',sans-serif;font-size:26px;color:var(--bld)}
+.dash-sub{font-size:13px;color:var(--tx3);margin-top:2px;font-weight:600}
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;padding:16px 22px}
+.cli-card{background:var(--surf);border-radius:12px;padding:16px 18px;border:1px solid var(--bdr);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cli-card:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(26,127,212,.15);transform:translateY(-1px)}
+
+/* ── TABLE SCREEN ── */
+.main{padding:14px 22px}
+.tbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.bp{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 15px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;transition:background .15s}
+.bp:hover{background:var(--blue2)}
+.bp.grn{background:#1a7a45}.bp.grn:hover{background:#1d9050}
+.bp.secondary{background:var(--bld)}.bp.secondary:hover{background:#1a3a7e}
+.bs{background:var(--surf);color:var(--tx2);border:1.5px solid var(--bdr);border-radius:8px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;transition:all .15s}
+.bs:hover{background:#dde4f0}
+.rtbadge{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:12px;color:var(--gn);font-weight:700}
+.rt-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── SUMMARY ── */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.sc{background:var(--surf);border-radius:11px;padding:13px 16px;border:1px solid var(--bdr);border-top:3px solid var(--blue)}
+.sl{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;font-weight:700;font-family:'Barlow Condensed',sans-serif}
+.sv{font-family:'DM Mono',monospace;font-size:21px;font-weight:500;color:var(--tx)}
+.svm{font-size:19px}
+.ss2{font-size:13px;color:var(--tx2);margin-top:3px;font-weight:700}
+
+/* ── TABLE ── */
+.twrap{background:var(--surf);border-radius:12px;border:1px solid var(--bdr);overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+table{width:100%;border-collapse:collapse;min-width:860px}
+th{background:#d4dcea;padding:11px 13px;text-align:left;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;border-bottom:2px solid var(--bdr);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover,th.srt{color:var(--blue)}
+td{padding:10px 13px;border-bottom:1px solid var(--bdr);vertical-align:middle;color:var(--tx2)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(26,127,212,.04)}
+tr.sold td{opacity:.5}
+.rb{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-family:'DM Mono',monospace;font-size:13px;font-weight:700}
+.rg{background:var(--gnb);color:var(--gn)}.ry{background:var(--ywb);color:var(--yw)}.rr{background:var(--rdb);color:var(--rd)}.rn{background:#d4dcea;color:var(--tx3)}
+.vn{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--tx);line-height:1.1}
+.vd{font-size:13px;color:var(--tx2);margin-top:2px;font-weight:600}
+.stsel{border:none;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;outline:none;font-family:'Rajdhani',sans-serif}
+.sd{background:var(--gnb);color:var(--gn)}.sv2c{background:#d4dcea;color:var(--tx3)}.sr{background:var(--ywb);color:var(--yw)}.sa{background:#dde8ff;color:#1a3a9a}
+.sbw{display:flex;align-items:center;gap:6px}
+.sb{height:6px;border-radius:3px;flex:1;background:var(--bdr);min-width:50px}
+.sf{height:100%;border-radius:3px}
+.sn{font-family:'DM Mono',monospace;font-size:12px;color:var(--tx2);min-width:22px;text-align:right}
+.tag{display:inline-block;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:700}
+.tg{background:var(--gnb);color:var(--gn)}
+.ab{background:none;border:none;cursor:pointer;padding:4px 5px;border-radius:4px;font-size:14px;transition:background .15s;line-height:1}
+.ab:hover{background:var(--bdr)}.ab.dl:hover{background:var(--rdb)}
+.ta-nt{width:100%;background:transparent;border:none;font-family:'Rajdhani',sans-serif;font-size:13px;color:var(--tx2);resize:none;overflow:hidden;cursor:pointer;padding:0;min-height:20px;line-height:1.4}
+.ta-nt:focus{background:#fff;border:1px solid var(--bdr);border-radius:5px;outline:none;padding:4px 7px;cursor:text;overflow:auto;min-height:60px}
+a.lnk{color:var(--blue);font-size:13px;font-weight:700;text-decoration:none}
+a.lnk:hover{color:var(--blue2);text-decoration:underline}
+.mn{font-family:'DM Mono',monospace}
+.lgd{margin-top:10px;font-size:13px;color:var(--tx2);display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-weight:700}
+.li{display:flex;align-items:center;gap:4px}
+.ld2{width:10px;height:10px;border-radius:50%}
+
+/* ── MODALS ── */
+.ovl{position:fixed;inset:0;background:rgba(10,15,26,.8);display:flex;align-items:flex-start;justify-content:center;z-index:200;padding:20px;overflow-y:auto}
+.mod{background:var(--panel);border-radius:14px;padding:24px;width:660px;max-width:100%;border:1px solid var(--bdr);margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.mtt{font-family:'SuiGeneris',sans-serif;font-size:21px;color:var(--bld);margin-bottom:16px}
+.fr{margin-bottom:10px}
+.lb{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;display:block;font-weight:700;font-family:'Barlow Condensed',sans-serif}
+.fi{width:100%;background:#fff;border:1.5px solid var(--bdr);border-radius:7px;padding:8px 12px;font-size:15px;font-family:'Rajdhani',sans-serif;color:var(--tx)}
+.fi:focus{outline:2px solid var(--blue);border-color:var(--blue)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mf{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+.ok-box{background:var(--gnb);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--gn);margin-bottom:10px;font-weight:700;border:1px solid #90d4b0}
+.warn-box{background:var(--ywb);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--yw);margin-bottom:10px;border:1px solid #d4b840;font-weight:600}
+.err-field{background:var(--rdb);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--rd);margin-bottom:12px;font-weight:600;border:1px solid #f5c5c0;display:none}
+.pa{width:100%;min-height:75px;background:#fff;border:1.5px solid var(--bdr);border-radius:7px;padding:9px 12px;font-size:14px;font-family:'Rajdhani',sans-serif;color:var(--tx);resize:vertical}
+.ntf{position:fixed;top:14px;right:16px;background:var(--hdr);color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;z-index:9999;border-left:4px solid var(--blue);max-width:340px;font-family:'Rajdhani',sans-serif;font-weight:700;box-shadow:0 4px 24px rgba(0,0,0,.35);animation:si .2s ease}
+@keyframes si{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════════ -->
+<div class="hdr">
+  <img class="logo-img" src="dcn_logo.png" alt="DCN">
+  <div>
+    <div class="ht">DE CARRO NOVO</div>
+    <div class="hs">Consultoria Automotiva &nbsp;&middot;&nbsp; CREA RS249226 &nbsp;&middot;&nbsp; @_decarronovo</div>
+  </div>
+  <div class="hsp"></div>
+  <div class="hdr-actions">
+    <div class="hup" id="hupWrap" style="display:none">Atualizado<br><b id="lupd">&mdash;</b></div>
+    <button class="logout-btn" onclick="doLogout()">Sair</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: LOGIN ════════════════════════════════════════════════ -->
+<div id="screen-login">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="login-logo"><img src="dcn_logo.png" alt="DCN"></div>
+      <div class="login-title">De Carro Novo</div>
+      <div class="login-sub">Consultoria Automotiva &mdash; Acesso Restrito</div>
+      <div class="err-box" id="loginErr"></div>
+      <div class="fr"><label class="lb">E-mail</label><input type="email" class="fi" id="loginEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fr"><label class="lb">Senha</label><input type="password" class="fi" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="bp" id="btnLogin" onclick="doLogin()" style="width:100%;padding:12px;font-size:16px;margin-top:8px">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: DASHBOARD (CONSULTOR) ═══════════════════════════════ -->
+<div id="screen-dashboard" style="display:none">
+  <div class="dash-header">
+    <div>
+      <div class="dash-title">Meus Clientes</div>
+      <div class="dash-sub">Selecione um cliente para abrir a tabela comparativa</div>
+    </div>
+    <button class="bp" onclick="openNewClientModal()" style="flex-shrink:0">+ Novo Cliente</button>
+  </div>
+  <div class="clients-grid" id="clientsList">
+    <div style="color:var(--tx3);text-align:center;padding:40px;font-size:14px">Carregando...</div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: TABELA DE VEÍCULOS ══════════════════════════════════ -->
+<div id="screen-table" style="display:none">
+  <!-- CLIENT BAR -->
+  <div class="cbar">
+    <div class="cf"><span class="cl">Cliente</span><span class="cv" id="cNome">&mdash;</span></div>
+    <div class="sep"></div>
+    <div class="cf"><span class="cl">Or&ccedil;amento</span><span class="cv" id="cOrc">&mdash;</span></div>
+    <div class="sep"></div>
+    <div class="cf"><span class="cl">Prefer&ecirc;ncia</span><span class="cv" id="cPref">&mdash;</span></div>
+    <div class="sep"></div>
+    <div class="cf"><span class="cl">Contato</span><span class="cv" id="cTel">&mdash;</span></div>
+    <button class="cbtn" id="backToDash" onclick="showDashboard()" style="display:none;margin-right:8px">&#8592; Clientes</button>
+    <button class="cbtn" onclick="openM('cliM')">&#9999; Editar Cliente</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="tbar">
+      <button class="bp" onclick="openM('addM')">+ Adicionar Ve&iacute;culo</button>
+      <button class="bs" onclick="expCSV()">&#8595; CSV</button>
+      <div class="rtbadge"><div class="rt-dot"></div>Tempo real</div>
+    </div>
+    <div class="sg" id="sg"></div>
+    <div class="twrap">
+      <table>
+        <thead><tr>
+          <th onclick="srt('score')" id="th-score">Rank</th>
+          <th>N&ordm; ID</th>
+          <th onclick="srt('md')" id="th-md">Ve&iacute;culo</th>
+          <th onclick="srt('an')" id="th-an">Ano</th>
+          <th onclick="srt('km')" id="th-km">KM</th>
+          <th onclick="srt('pr')" id="th-pr">Pre&ccedil;o</th>
+          <th onclick="srt('ci')" id="th-ci">Cidade</th>
+          <th>Status</th>
+          <th>Score</th>
+          <th>An&uacute;ncio</th>
+          <th>Observa&ccedil;&otilde;es</th>
+          <th>A&ccedil;&otilde;es</th>
+        </tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+    <div class="lgd">
+      <div class="li"><div class="ld2" style="background:var(--gn)"></div>Verde = melhor</div>
+      <div class="li"><div class="ld2" style="background:var(--yw)"></div>Amarelo = intermedi&aacute;ria</div>
+      <div class="li"><div class="ld2" style="background:var(--rd)"></div>Vermelho = menos vantajosa</div>
+      <span style="margin-left:auto">De Carro Novo &middot; @_decarronovo</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: NOVO CLIENTE ══════════════════════════════════════════ -->
+<div class="ovl" id="modalNewClient" style="display:none"><div class="mod" style="width:500px">
+  <div class="mtt">&#128100; Novo Cliente</div>
+  <div class="err-field" id="ncErr"></div>
+  <div class="fr"><label class="lb">Nome do Cliente *</label><input type="text" class="fi" id="nc_name" placeholder="Ex: João Silva"></div>
+  <div class="fg">
+    <div class="fr"><label class="lb">E-mail de acesso *</label><input type="email" class="fi" id="nc_email" placeholder="cliente@email.com"></div>
+    <div class="fr"><label class="lb">Senha *</label><input type="password" class="fi" id="nc_pass" placeholder="mín. 6 caracteres"></div>
+  </div>
+  <div class="fg">
+    <div class="fr"><label class="lb">Or&ccedil;amento (R$)</label><input type="number" class="fi" id="nc_budget" placeholder="50000"></div>
+    <div class="fr"><label class="lb">Prefer&ecirc;ncias</label><input type="text" class="fi" id="nc_pref" placeholder="flex, automático..."></div>
+  </div>
+  <div style="background:#eef4ff;border-radius:8px;padding:10px 13px;font-size:12px;color:#1a3a9a;font-weight:600;margin-top:4px">
+    &#128274; O cliente acessa com o e-mail e senha que você definir aqui. Compartilhe o link da página com ele.
+  </div>
+  <div class="mf"><button class="bs" onclick="closeM('modalNewClient')">Cancelar</button><button class="bp" id="btnSaveClient" onclick="saveNewClient()">Criar Cliente</button></div>
+</div></div>
+
+<!-- ══ MODAL: EDITAR CLIENTE ════════════════════════════════════════ -->
+<div class="ovl" id="cliM" style="display:none"><div class="mod" style="width:480px">
+  <div class="mtt">&#9999; Dados do Cliente</div>
+  <div class="fr"><label class="lb">Nome</label><input type="text" class="fi" id="ci_name"></div>
+  <div class="fg">
+    <div class="fr"><label class="lb">Telefone</label><input type="text" class="fi" id="ci_phone"></div>
+    <div class="fr"><label class="lb">Or&ccedil;amento (R$)</label><input type="number" class="fi" id="ci_budget"></div>
+  </div>
+  <div class="fr"><label class="lb">Prefer&ecirc;ncias</label><input type="text" class="fi" id="ci_pref"></div>
+  <div class="mf"><button class="bs" onclick="closeM('cliM')">Cancelar</button><button class="bp" onclick="saveClientInfo()">Salvar</button></div>
+</div></div>
+
+<!-- ══ MODAL: ADICIONAR VEÍCULO ════════════════════════════════════ -->
+<div class="ovl" id="addM" style="display:none"><div class="mod" style="width:600px">
+  <div class="mtt">+ Adicionar Ve&iacute;culo</div>
+  <div class="fr"><label class="lb">Link do an&uacute;ncio</label>
+    <div style="display:flex;gap:8px"><input type="url" class="fi" id="fu" placeholder="https://www.olx.com.br/..."><button class="bp" onclick="parseURL()" style="white-space:nowrap;flex-shrink:0;font-size:13px">Extrair URL</button></div>
+  </div>
+  <div class="fr"><label class="lb">Ou cole o texto do an&uacute;ncio</label>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <textarea class="pa" id="fpaste" style="flex:1" placeholder="Ctrl+A, Ctrl+C na p&aacute;gina do an&uacute;ncio, Ctrl+V aqui..."></textarea>
+      <button class="bp" onclick="parseText()" style="white-space:nowrap;flex-shrink:0;font-size:13px;align-self:flex-end">Extrair Texto</button>
+    </div>
+  </div>
+  <div id="parseResult" style="display:none;margin-bottom:8px"></div>
+  <div style="border-top:2px solid var(--bdr);padding-top:12px;margin-top:4px">
+    <div style="font-size:13px;color:var(--blue);font-family:'SuiGeneris',sans-serif;margin-bottom:10px">DADOS DO VE&Iacute;CULO</div>
+    <div class="fg"><div class="fr"><label class="lb">Modelo *</label><input type="text" class="fi" id="fm" placeholder="Nissan Livina S"></div><div class="fr"><label class="lb">Motor / Vers&atilde;o</label><input type="text" class="fi" id="fv" placeholder="1.6"></div></div>
+    <div class="fg"><div class="fr"><label class="lb">Ano</label><input type="number" class="fi" id="fa"></div><div class="fr"><label class="lb">Quilometragem</label><input type="number" class="fi" id="fk"></div></div>
+    <div class="fg"><div class="fr"><label class="lb">Pre&ccedil;o (R$)</label><input type="number" class="fi" id="fp"></div><div class="fr"><label class="lb">Cidade</label><input type="text" class="fi" id="fc"></div></div>
+    <div class="fg"><div class="fr"><label class="lb">Cor</label><input type="text" class="fi" id="fcr"></div>
+      <div class="fr"><label class="lb">C&acirc;mbio</label><select class="fi" id="fcb"><option value="">--</option><option>Manual</option><option>Automatico</option><option>CVT</option></select></div></div>
+    <div class="fr"><label class="lb">Combust&iacute;vel</label><select class="fi" id="fco"><option value="">--</option><option>Flex</option><option>Gasolina</option><option>Diesel</option><option>Eletrico</option></select></div>
+    <div class="fr"><label class="lb">Observa&ccedil;&otilde;es</label><textarea class="fi" id="fnt" rows="3" style="resize:vertical"></textarea></div>
+  </div>
+  <div class="mf"><button class="bs" onclick="closeM('addM')">Cancelar</button><button class="bp" onclick="saveV()">Salvar Ve&iacute;culo</button></div>
+</div></div>
+
+<!-- ══ MODAL: EDITAR VEÍCULO ════════════════════════════════════════ -->
+<div class="ovl" id="edM" style="display:none"><div class="mod" style="width:540px">
+  <div class="mtt">&#9999; Editar Ve&iacute;culo</div>
+  <input type="hidden" id="eid">
+  <div class="fg"><div class="fr"><label class="lb">Modelo</label><input type="text" class="fi" id="em"></div><div class="fr"><label class="lb">Motor/Vers&atilde;o</label><input type="text" class="fi" id="ev"></div></div>
+  <div class="fg"><div class="fr"><label class="lb">Ano</label><input type="number" class="fi" id="ea"></div><div class="fr"><label class="lb">KM</label><input type="number" class="fi" id="ek"></div></div>
+  <div class="fg"><div class="fr"><label class="lb">Pre&ccedil;o</label><input type="number" class="fi" id="ep"></div><div class="fr"><label class="lb">Cidade</label><input type="text" class="fi" id="ec"></div></div>
+  <div class="fg"><div class="fr"><label class="lb">Cor</label><input type="text" class="fi" id="ecr"></div>
+    <div class="fr"><label class="lb">C&acirc;mbio</label><select class="fi" id="ecb"><option value="">--</option><option>Manual</option><option>Automatico</option><option>CVT</option></select></div></div>
+  <div class="fr"><label class="lb">Combust&iacute;vel</label><select class="fi" id="eco"><option value="">--</option><option>Flex</option><option>Gasolina</option><option>Diesel</option><option>Eletrico</option></select></div>
+  <div class="fr"><label class="lb">Observa&ccedil;&otilde;es</label><textarea class="fi" id="ent" rows="3" style="resize:vertical"></textarea></div>
+  <div class="mf"><button class="bs" onclick="closeM('edM')">Cancelar</button><button class="bp" onclick="saveEd()">Salvar</button></div>
+</div></div>
+
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────────────────────
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCzu21eQaUh8EBFcqNMI9tas3oSoA_MQhs",
+  authDomain: "dcn-consultoria.firebaseapp.com",
+  databaseURL: "https://dcn-consultoria-default-rtdb.firebaseio.com",
+  projectId: "dcn-consultoria",
+  storageBucket: "dcn-consultoria.firebasestorage.app",
+  messagingSenderId: "90870697865",
+  appId: "1:90870697865:web:af08444f66f91b4dc79b58"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+};
+
+// ─── ESTADO GLOBAL ─────────────────────────────────────────────────────────
+var app, auth, db;
+var currentUser = null;
+var currentRole = null;
+var currentClientId = null;
+var vehicleListener = null;
+var clientsListener = null;
+var onlineInterval = null;
+var SO = {k:'score', d:-1};
+var LOCAL_VEHICLES = [];
+var LOCAL_CLIENT_INFO = {};
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+function initFirebase() {
+  try {
+    app  = firebase.initializeApp(FIREBASE_CONFIG);
+    auth = firebase.auth();
+    db   = firebase.database();
+
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        currentUser = user;
+        loadUserRole(user.uid);
+      } else {
+        currentUser = null;
+        showScreen('login');
+      }
+    });
+  } catch(e) {
+    showErr('Erro Firebase: ' + e.message + '. Configure o FIREBASE_CONFIG no arquivo.');
+  }
+}
+
+function loadUserRole(uid) {
+  db.ref('users/' + uid).once('value').then(function(snap) {
+    var data = snap.val();
+    if (!data) { showErr('Usuário não encontrado no banco.'); auth.signOut(); return; }
+    currentRole = data.role;
+    currentClientId = data.clientId || null;
+    if (currentRole === 'consultant') {
+      showDashboard();
+    } else if (currentRole === 'client') {
+      openClientTable(currentClientId);
+    } else {
+      showErr('Perfil inválido.');
+      auth.signOut();
+    }
+  }).catch(function(e) { showErr('Erro ao carregar perfil: ' + e.message); });
+}
+
+// ─── SCREENS ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  ['screen-login','screen-dashboard','screen-table'].forEach(function(s) {
+    var el = document.getElementById(s);
+    if (el) el.style.display = 'none';
+  });
+  var target = document.getElementById('screen-' + id);
+  if (target) target.style.display = 'block';
+}
+
+function showErr(msg) {
+  var el = document.getElementById('loginErr');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+  console.error(msg);
+}
+
+// ─── LOGIN ─────────────────────────────────────────────────────────────────
+function doLogin() {
+  var email = gv('loginEmail').trim();
+  var pass  = gv('loginPass').trim();
+  var errEl = document.getElementById('loginErr');
+  if (errEl) errEl.style.display = 'none';
+  if (!email || !pass) { showErr('Preencha email e senha.'); return; }
+  var btn = document.getElementById('btnLogin');
+  if (btn) { btn.textContent = 'Entrando...'; btn.disabled = true; }
+  auth.signInWithEmailAndPassword(email, pass)
+    .catch(function(e) {
+      showErr('Login inválido: ' + (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found' ? 'Email ou senha incorretos.' : e.message));
+      if (btn) { btn.textContent = 'Entrar'; btn.disabled = false; }
+    });
+}
+
+function doLogout() {
+  stopListeners();
+  auth.signOut();
+}
+
+// ─── DASHBOARD (CONSULTOR) ─────────────────────────────────────────────────
+function showDashboard() {
+  showScreen('dashboard');
+  loadClients();
+}
+
+function loadClients() {
+  if (clientsListener) db.ref('clients').off('value', clientsListener);
+  clientsListener = db.ref('clients').on('value', function(snap) {
+    var clients = snap.val() || {};
+    renderClientsList(clients);
+  });
+}
+
+function renderClientsList(clients) {
+  var el = document.getElementById('clientsList');
+  if (!el) return;
+  var keys = Object.keys(clients);
+  if (!keys.length) {
+    el.innerHTML = '<div style="color:var(--tx3);text-align:center;padding:24px;font-size:14px">Nenhum cliente ainda. Clique em "+ Novo Cliente" para começar.</div>';
+    return;
+  }
+  var html = '';
+  keys.forEach(function(cid) {
+    var c = clients[cid].info || {};
+    var vCount = Object.keys(clients[cid].vehicles || {}).length;
+    html += '<div class="cli-card" onclick="openClientTable(\'' + cid + '\')">' +
+      '<div style="display:flex;align-items:center;gap:12px">' +
+      '<div style="width:44px;height:44px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:SuiGeneris,sans-serif;font-size:18px;color:#fff;flex-shrink:0">' + (c.name||'?').charAt(0).toUpperCase() + '</div>' +
+      '<div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:800;color:var(--tx)">' + (c.name||cid) + '</div>' +
+      '<div style="font-size:12px;color:var(--tx3);margin-top:2px">' + (c.email||'') + ' &nbsp;·&nbsp; ' + vCount + ' veículo(s)</div></div></div>' +
+      '<div style="display:flex;gap:8px;flex-shrink:0">' +
+      '<button class="bs" onclick="event.stopPropagation();copyLink(\'' + cid + '\')" title="Copiar link">🔗 Link</button>' +
+      '<button class="bs" onclick="event.stopPropagation();confirmDelete(\'' + cid + '\',\'' + (c.name||cid) + '\')" style="color:var(--rd)" title="Remover">🗑</button>' +
+      '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function copyLink(cid) {
+  var url = window.location.href.split('?')[0] + '?c=' + cid;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function() { ntf('Link copiado! ' + url); });
+  } else {
+    window.prompt('Link do cliente:', url);
+  }
+}
+
+function confirmDelete(cid, name) {
+  if (confirm('Remover cliente "' + name + '" e todos os dados?')) {
+    db.ref('clients/' + cid).remove();
+    ntf('Cliente removido.');
+  }
+}
+
+// ─── NOVO CLIENTE ──────────────────────────────────────────────────────────
+function openNewClientModal() {
+  ['nc_name','nc_email','nc_pass','nc_budget','nc_pref'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var el = document.getElementById('ncErr'); if (el) el.style.display = 'none';
+  openM('modalNewClient');
+}
+
+function saveNewClient() {
+  var name   = gv('nc_name').trim();
+  var email  = gv('nc_email').trim();
+  var pass   = gv('nc_pass').trim();
+  var budget = parseInt(gv('nc_budget')) || 0;
+  var pref   = gv('nc_pref').trim();
+  var errEl  = document.getElementById('ncErr');
+
+  if (!name || !email || !pass) {
+    if (errEl) { errEl.textContent = 'Nome, email e senha são obrigatórios.'; errEl.style.display = 'block'; }
+    return;
+  }
+  if (pass.length < 6) {
+    if (errEl) { errEl.textContent = 'Senha mínimo 6 caracteres.'; errEl.style.display = 'block'; }
+    return;
+  }
+
+  var btn = document.getElementById('btnSaveClient');
+  if (btn) { btn.textContent = 'Criando...'; btn.disabled = true; }
+
+  // Creates Firebase Auth user via REST (avoids signing out consultant)
+  var cid = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36);
+
+  // Use secondary app instance to create user without logging out
+  var secondaryApp;
+  try {
+    secondaryApp = firebase.app('secondary');
+  } catch(e) {
+    secondaryApp = firebase.initializeApp(FIREBASE_CONFIG, 'secondary');
+  }
+  var secondaryAuth = secondaryApp.auth();
+
+  secondaryAuth.createUserWithEmailAndPassword(email, pass)
+    .then(function(cred) {
+      var uid = cred.user.uid;
+      var writes = {};
+      writes['users/' + uid] = { role: 'client', clientId: cid, email: email, name: name };
+      writes['clients/' + cid + '/info'] = { name: name, email: email, budget: budget, pref: pref, createdAt: Date.now(), authUid: uid };
+      return db.ref().update(writes);
+    })
+    .then(function() {
+      secondaryAuth.signOut();
+      closeM('modalNewClient');
+      ntf('Cliente "' + name + '" criado!');
+      if (btn) { btn.textContent = 'Criar Cliente'; btn.disabled = false; }
+    })
+    .catch(function(e) {
+      if (errEl) { errEl.textContent = 'Erro: ' + (e.code === 'auth/email-already-in-use' ? 'Este email já está cadastrado.' : e.message); errEl.style.display = 'block'; }
+      if (btn) { btn.textContent = 'Criar Cliente'; btn.disabled = false; }
+    });
+}
+
+// ─── TABELA DE VEÍCULOS ────────────────────────────────────────────────────
+function openClientTable(cid) {
+  currentClientId = cid;
+  stopVehicleListener();
+  showScreen('table');
+
+  // Load client info
+  db.ref('clients/' + cid + '/info').once('value').then(function(snap) {
+    LOCAL_CLIENT_INFO = snap.val() || {};
+    updClientBar();
+  });
+
+  // Real-time vehicle listener
+  vehicleListener = db.ref('clients/' + cid + '/vehicles').on('value', function(snap) {
+    var data = snap.val() || {};
+    LOCAL_VEHICLES = Object.values(data);
+    render();
+    updTime();
+  });
+
+  // Show back button only for consultant
+  var backBtn = document.getElementById('backToDash');
+  if (backBtn) backBtn.style.display = (currentRole === 'consultant') ? 'inline-flex' : 'none';
+}
+
+function stopVehicleListener() {
+  if (vehicleListener && currentClientId) {
+    db.ref('clients/' + currentClientId + '/vehicles').off('value', vehicleListener);
+    vehicleListener = null;
+  }
+}
+function stopListeners() {
+  stopVehicleListener();
+  if (clientsListener) { db.ref('clients').off('value', clientsListener); clientsListener = null; }
+}
+
+// ─── CRUD VEÍCULOS ─────────────────────────────────────────────────────────
+function saveV() {
+  var md = gv('fm').trim();
+  if (!md) { ntf('Informe o modelo!'); return; }
+  var existing = LOCAL_VEHICLES;
+  var nextNid = existing.length ? Math.max.apply(null, existing.map(function(x) { return parseInt(x.nid) || 0; })) + 1 : 1;
+  var veh = {
+    id: 'v' + Date.now(),
+    nid: nextNid,
+    url: gv('fu').trim(),
+    md: md, vr: gv('fv').trim(),
+    an: ni('fa'), km: ni('fk'), pr: ni('fp'),
+    ci: gv('fc').trim(), cr: gv('fcr').trim(),
+    cb: gv('fcb'), co: gv('fco'),
+    nt: gv('fnt').trim(),
+    st: 'disponivel',
+    dt: new Date().toLocaleDateString('pt-BR'),
+    updBy: currentUser ? (currentUser.email || '') : ''
+  };
+  db.ref('clients/' + currentClientId + '/vehicles/' + veh.id).set(veh)
+    .then(function() { closeM('addM'); ntf('Veículo adicionado!'); })
+    .catch(function(e) { ntf('Erro: ' + e.message); });
+}
+
+function saveEd() {
+  var id = gv('eid');
+  var updates = {
+    md: gv('em').trim(), vr: gv('ev').trim(), an: ni('ea'), km: ni('ek'),
+    pr: ni('ep'), ci: gv('ec').trim(), cr: gv('ecr').trim(),
+    cb: gv('ecb'), co: gv('eco'), nt: gv('ent').trim(),
+    updBy: currentUser ? currentUser.email : ''
+  };
+  db.ref('clients/' + currentClientId + '/vehicles/' + id).update(updates)
+    .then(function() { closeM('edM'); ntf('Atualizado!'); })
+    .catch(function(e) { ntf('Erro: ' + e.message); });
+}
+
+function chSt(id, ns, sel) {
+  var m = {disponivel:'sd',vendido:'sv2c',reservado:'sr',analise:'sa',removido:'sv2c'};
+  sel.className = 'stsel ' + (m[ns] || 'sd');
+  db.ref('clients/' + currentClientId + '/vehicles/' + id + '/st').set(ns);
+}
+
+function saveNt(id, val) {
+  db.ref('clients/' + currentClientId + '/vehicles/' + id + '/nt').set(val);
+}
+
+function delV(id) {
+  if (!confirm('Remover este veículo?')) return;
+  db.ref('clients/' + currentClientId + '/vehicles/' + id).remove()
+    .then(function() { ntf('Removido.'); });
+}
+
+// ─── SCORING ───────────────────────────────────────────────────────────────
+function calcS(list) {
+  var av = list.filter(function(x) { return x.st !== 'vendido' && x.st !== 'removido'; });
+  if (!av.length) return list.map(function(x) { return Object.assign({}, x, {score:0}); });
+  var ps = av.map(function(x){return x.pr||0;}).filter(Boolean);
+  var ks = av.map(function(x){return x.km||0;}).filter(Boolean);
+  var as = av.map(function(x){return x.an||0;}).filter(Boolean);
+  var mnP=ps.length?Math.min.apply(null,ps):0, mxP=ps.length?Math.max.apply(null,ps):0;
+  var mnK=ks.length?Math.min.apply(null,ks):0, mxK=ks.length?Math.max.apply(null,ks):0;
+  var mnA=as.length?Math.min.apply(null,as):0, mxA=as.length?Math.max.apply(null,as):0;
+  return list.map(function(x) {
+    if (x.st==='vendido'||x.st==='removido') return Object.assign({},x,{score:0});
+    var s=40;
+    if(x.pr&&mxP>mnP) s+=40*(1-(x.pr-mnP)/(mxP-mnP)); else if(x.pr) s+=20;
+    if(x.km&&mxK>mnK) s+=30*(1-(x.km-mnK)/(mxK-mnK)); else if(x.km) s+=15;
+    if(x.an&&mxA>mnA) s+=25*((x.an-mnA)/(mxA-mnA)); else if(x.an) s+=12;
+    if(LOCAL_CLIENT_INFO.budget&&x.pr&&x.pr<=LOCAL_CLIENT_INFO.budget) s+=5;
+    return Object.assign({},x,{score:Math.min(100,Math.round(s))});
+  });
+}
+function rCls(s,st){if(st==='vendido'||st==='removido')return'rn';if(s>=78)return'rg';if(s>=50)return'ry';return'rr';}
+function bClr(s,st){if(st==='vendido'||st==='removido')return'#aaa';if(s>=78)return'var(--gn)';if(s>=50)return'#c08000';return'var(--rd)';}
+
+// ─── RENDER ────────────────────────────────────────────────────────────────
+function render() {
+  var sc = calcS(LOCAL_VEHICLES.slice());
+  sc.sort(function(a,b) {
+    var av = SO.k==='score' ? a.score : a[SO.k];
+    var bv = SO.k==='score' ? b.score : b[SO.k];
+    if (av===undefined||av===null) av = SO.d>0 ? Infinity : -Infinity;
+    if (bv===undefined||bv===null) bv = SO.d>0 ? Infinity : -Infinity;
+    if (typeof av==='string') return av.localeCompare(String(bv))*SO.d;
+    return (Number(av)-Number(bv))*SO.d;
+  });
+  renderSg(sc); renderTb(sc);
+}
+
+function renderSg(list) {
+  var av = list.filter(function(x){return x.st!=='vendido'&&x.st!=='removido';});
+  var ps=av.map(function(x){return x.pr||0;}).filter(Boolean);
+  var ks=av.map(function(x){return x.km||0;}).filter(Boolean);
+  var as=av.map(function(x){return x.an||0;}).filter(Boolean);
+  function br(v){return v?'R$ '+v.toLocaleString('pt-BR'):'--';}
+  function bk(v){return v?v.toLocaleString('pt-BR')+' km':'--';}
+  var h='<div class="sc"><div class="sl">Total</div><div class="sv">'+list.length+'</div><div class="ss2">'+av.length+' disp. / '+(list.length-av.length)+' fora</div></div>';
+  h+='<div class="sc" style="border-top-color:var(--gn)"><div class="sl">Menor Preço</div><div class="sv svm">'+(ps.length?br(Math.min.apply(null,ps)):'--')+'</div><div class="ss2">'+(ps.length?'Maior: '+br(Math.max.apply(null,ps)):'')+'</div></div>';
+  h+='<div class="sc"><div class="sl">Menor KM</div><div class="sv svm">'+(ks.length?bk(Math.min.apply(null,ks)):'--')+'</div><div class="ss2">'+(ks.length?'Maior: '+bk(Math.max.apply(null,ks)):'')+'</div></div>';
+  h+='<div class="sc" style="border-top-color:var(--bld)"><div class="sl">Ano Mais Novo</div><div class="sv" style="color:var(--bld)">'+(as.length?Math.max.apply(null,as):'--')+'</div><div class="ss2">'+(as.length?'Mais antigo: '+Math.min.apply(null,as):'')+'</div></div>';
+  var budget = LOCAL_CLIENT_INFO.budget||0;
+  if(budget){var d=av.filter(function(x){return x.pr&&x.pr<=budget;}).length;h+='<div class="sc" style="border-top-color:var(--gn)"><div class="sl">No Orçamento</div><div class="sv" style="color:var(--gn);font-size:24px">'+d+'</div><div class="ss2">de '+av.length+' / até '+br(budget)+'</div></div>';}
+  document.getElementById('sg').innerHTML=h;
+}
+
+function renderTb(sc) {
+  var tb=document.getElementById('tb');
+  if(!sc.length){tb.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--tx3)"><div style="font-size:38px">&#128663;</div><div style="font-family:SuiGeneris,sans-serif;font-size:20px;margin-top:8px">Nenhum veículo</div><div style="font-size:14px;margin-top:4px">Clique em + Adicionar Veículo</div></td></tr>';return;}
+  var smM={disponivel:'sd',vendido:'sv2c',reservado:'sr',analise:'sa',removido:'sv2c'};
+  var slM={disponivel:'Disponível',vendido:'Vendido',reservado:'Reservado',analise:'Em análise',removido:'Removido'};
+  var rk=0,rows='';
+  for(var i=0;i<sc.length;i++){
+    var x=sc[i];
+    var sold=x.st==='vendido'||x.st==='removido';
+    if(!sold)rk++;
+    var s=x.score||0;
+    var dtl=[x.vr,x.cr,x.cb,x.co].filter(Boolean).join(' / ');
+    var budget=LOCAL_CLIENT_INFO.budget||0;
+    var ot=(budget&&x.pr&&x.pr<=budget&&!sold)?'<span class="tag tg">orc.</span>':'';
+    var opts='';
+    var stL=['disponivel','reservado','analise','vendido','removido'];
+    for(var j=0;j<stL.length;j++) opts+='<option value="'+stL[j]+'"'+(x.st===stL[j]?' selected':'')+'>'+slM[stL[j]]+'</option>';
+    var ntSafe=(x.nt||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    var updInfo=x.updBy?'<div class="vd" style="color:#8090a8;font-size:11px">'+x.updBy+'</div>':'';
+    rows+='<tr id="r'+x.id+'"'+(sold?' class="sold"':'')+'>'+
+      '<td><span class="rb '+rCls(s,x.st)+'">'+(sold?'-':rk)+'</span></td>'+
+      '<td><span style="font-family:monospace;font-size:13px;font-weight:700;color:var(--bld);background:#e8f0fe;padding:3px 9px;border-radius:6px">'+(x.nid||'--')+'</span></td>'+
+      '<td><div class="vn">'+(x.md||'-')+'</div>'+(dtl?'<div class="vd">'+dtl+'</div>':'')+(x.dt?'<div class="vd" style="color:var(--tx3)">'+x.dt+'</div>':'')+updInfo+'</td>'+
+      '<td class="mn" style="font-size:14px;font-weight:500">'+(x.an||'-')+'</td>'+
+      '<td class="mn" style="font-size:14px;font-weight:500">'+(x.km?x.km.toLocaleString('pt-BR')+' km':'-')+'</td>'+
+      '<td><div class="mn" style="font-size:15px;font-weight:700;color:var(--tx)">'+(x.pr?'R$ '+x.pr.toLocaleString('pt-BR'):'-')+'</div>'+ot+'</td>'+
+      '<td style="font-size:13px">'+(x.ci||'-')+'</td>'+
+      '<td><select class="stsel '+(smM[x.st]||'sd')+'" onchange="chSt(\''+x.id+'\',this.value,this)">'+opts+'</select></td>'+
+      '<td><div class="sbw"><div class="sb"><div class="sf" style="width:'+s+'%;background:'+bClr(s,x.st)+'"></div></div><span class="sn">'+s+'</span></div></td>'+
+      '<td>'+(x.url?'<a class="lnk" href="'+x.url.replace(/"/g,'&quot;')+'" target="_blank">Ver</a>':'-')+'</td>'+
+      '<td style="max-width:180px"><textarea class="ta-nt" placeholder="anotações..." onblur="saveNt(\''+x.id+'\',this.value)">'+ntSafe+'</textarea></td>'+
+      '<td><button class="ab" onclick="openEd(\''+x.id+'\')" title="Editar">&#9999;</button> <button class="ab dl" onclick="delV(\''+x.id+'\')" title="Remover">&#128465;</button></td>'+
+    '</tr>';
+  }
+  tb.innerHTML=rows;
+  document.querySelectorAll('.ta-nt').forEach(function(ta){ta.style.height='auto';ta.style.height=Math.max(22,ta.scrollHeight)+'px';});
+}
+
+function srt(k){
+  document.querySelectorAll('th').forEach(function(t){t.classList.remove('srt');});
+  if(SO.k===k)SO.d*=-1;else{SO.k=k;SO.d=(k==='score'?-1:1);}
+  var th=document.getElementById('th-'+k);if(th)th.classList.add('srt');
+  render();
+}
+
+// ─── CLIENT BAR ────────────────────────────────────────────────────────────
+function updClientBar() {
+  var ci = LOCAL_CLIENT_INFO;
+  setEl('cNome', ci.name||'--');
+  setEl('cOrc', ci.budget?'R$ '+Number(ci.budget).toLocaleString('pt-BR'):'--');
+  setEl('cPref', ci.pref||'--');
+  setEl('cTel', ci.phone||'--');
+}
+function setEl(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+
+function saveClientInfo() {
+  var updates = {
+    name:   gv('ci_name').trim(),
+    phone:  gv('ci_phone').trim(),
+    budget: parseInt(gv('ci_budget'))||0,
+    pref:   gv('ci_pref').trim()
+  };
+  db.ref('clients/' + currentClientId + '/info').update(updates)
+    .then(function() {
+      LOCAL_CLIENT_INFO = Object.assign(LOCAL_CLIENT_INFO, updates);
+      updClientBar(); closeM('cliM'); ntf('Dados do cliente salvos!');
+    });
+}
+
+// ─── PARSE URL ─────────────────────────────────────────────────────────────
+function parseURL() {
+  var url=document.getElementById('fu').value.trim();
+  if(!url){showPR('w','Cole o link primeiro.');return;}
+  var res={},hits=0;
+  var slug='';
+  try{slug=decodeURIComponent(url).toLowerCase().replace(/[-_+]/g,' ');}
+  catch(e){slug=url.toLowerCase();}
+  var marcas=['toyota','honda','volkswagen','vw','chevrolet','ford','hyundai','fiat','renault','nissan','jeep','mitsubishi','kia','bmw','mercedes','audi'];
+  var mods=['civic','corolla','hb20','onix','argo','sandero','duster','captur','compass','renegade','tcross','polo','virtus','golf','jetta','tiguan','tucson','creta','hilux','ranger','s10','livina','versa','march','kwid','kicks','hrv','fit','city','strada','toro','pulse','tracker'];
+  var mF='',moF='';
+  for(var i=0;i<marcas.length;i++){if(slug.indexOf(marcas[i])>-1){mF=marcas[i];break;}}
+  for(var i=0;i<mods.length;i++){if(slug.indexOf(mods[i])>-1){moF=mods[i];break;}}
+  if(mF||moF){res.md=[mF,moF].filter(Boolean).map(function(p){return p.charAt(0).toUpperCase()+p.slice(1);}).join(' ');hits++;}
+  var parts=slug.split(/[\/?\s]+/);
+  for(var i=0;i<parts.length;i++){if(/^20[012][0-9]$/.test(parts[i])){res.an=parseInt(parts[i]);hits++;break;}}
+  var kmIdx=slug.indexOf('km');
+  if(kmIdx>0){var before=slug.substring(Math.max(0,kmIdx-8),kmIdx).replace(/[^0-9]/g,'');if(before.length>=3){var v=parseInt(before);if(v>100&&v<999999){res.km=v;hits++;}}}
+  var cores=['branco','prata','preto','cinza','azul','vermelho','verde','amarelo','laranja','bege','marrom','grafite'];
+  for(var i=0;i<cores.length;i++){if(slug.indexOf(cores[i])>-1){res.cr=cores[i].charAt(0).toUpperCase()+cores[i].slice(1);hits++;break;}}
+  if(slug.indexOf('automatico')>-1||slug.indexOf('automatica')>-1){res.cb='Automatico';hits++;}
+  else if(slug.indexOf('cvt')>-1){res.cb='CVT';hits++;}
+  else if(slug.indexOf('manual')>-1){res.cb='Manual';hits++;}
+  if(slug.indexOf('flex')>-1){res.co='Flex';hits++;}
+  else if(slug.indexOf('gasolina')>-1){res.co='Gasolina';hits++;}
+  else if(slug.indexOf('diesel')>-1){res.co='Diesel';hits++;}
+  if(!hits){showPR('w','Dados não encontrados na URL. Cole o texto abaixo.');return;}
+  fillFields(res);showPR('ok',hits+' campo(s) extraído(s) da URL.');
+}
+
+function parseText() {
+  var raw=document.getElementById('fpaste').value;
+  if(!raw.trim()){showPR('w','Cole o texto do anúncio.');return;}
+  var res={},hits=0;
+  var prM=raw.match(/R\$\s*([\d]{2,3}[.,][\d]{3})/i)||raw.match(/R\$\s*(\d{5,6})/i);
+  if(prM){var v=parseInt(prM[1].replace(/\./g,'').replace(',',''));if(v>=1000&&v<=5000000){res.pr=v;hits++;}}
+  var anM=raw.match(/(20[01][0-9])\s*[\/\-]\s*(20[012][0-9])/)||raw.match(/ano[:\s]*(20[012][0-9])/i)||raw.match(/(20[012][0-9])/);
+  if(anM){res.an=parseInt(anM[anM.length-1]||anM[1]);hits++;}
+  var kmM=raw.match(/([\d]{3}\.[\d]{3})\s*km/i)||raw.match(/(\d{4,6})\s*km/i);
+  if(kmM){var v=parseInt(kmM[1].replace(/\./g,''));if(v>=0&&v<999999){res.km=v;hits++;}}
+  var lower=raw.toLowerCase();
+  var cores=['branco','prata','preto','cinza','azul','vermelho','verde','amarelo','laranja','bege','marrom','grafite'];
+  for(var i=0;i<cores.length;i++){if(lower.indexOf(cores[i])>-1){res.cr=cores[i].charAt(0).toUpperCase()+cores[i].slice(1);hits++;break;}}
+  if(lower.indexOf('automat')>-1){res.cb='Automatico';hits++;}
+  else if(lower.indexOf('cvt')>-1){res.cb='CVT';hits++;}
+  else if(lower.indexOf('manual')>-1){res.cb='Manual';hits++;}
+  if(lower.indexOf('flex')>-1){res.co='Flex';hits++;}
+  else if(lower.indexOf('gasolina')>-1){res.co='Gasolina';hits++;}
+  else if(lower.indexOf('diesel')>-1){res.co='Diesel';hits++;}
+  var marcas=['Toyota','Honda','Volkswagen','VW','Chevrolet','Ford','Hyundai','Fiat','Renault','Nissan','Jeep','Mitsubishi','Kia'];
+  var mods=['Civic','Corolla','HB20','Onix','Argo','Sandero','Duster','Compass','Renegade','Polo','Virtus','Golf','Jetta','Livina','Versa','March','Kwid','Creta','Tucson'];
+  var mF='',moF='';
+  for(var i=0;i<marcas.length;i++){if(raw.indexOf(marcas[i])>-1){mF=marcas[i];break;}}
+  for(var i=0;i<mods.length;i++){if(lower.indexOf(mods[i].toLowerCase())>-1){moF=mods[i];break;}}
+  if(mF||moF){
+    var linhas=raw.split('\n').filter(function(l){var ll=l.toLowerCase();return(mF&&ll.indexOf(mF.toLowerCase())>-1)||(moF&&ll.indexOf(moF.toLowerCase())>-1);});
+    if(linhas.length){linhas.sort(function(a,b){return a.length-b.length;});res.md=linhas[0].trim().substring(0,60);}
+    else res.md=[mF,moF].filter(Boolean).join(' ');
+    hits++;
+  }
+  if(!hits){showPR('w','Nenhum dado. Cole mais texto.');return;}
+  fillFields(res);showPR('ok',hits+' campo(s) identificado(s).');
+}
+
+function fillFields(r){
+  if(r.md)setV('fm',r.md);if(r.vr)setV('fv',r.vr);if(r.an)setV('fa',r.an);
+  if(r.km)setV('fk',r.km);if(r.pr)setV('fp',r.pr);if(r.ci)setV('fc',r.ci);
+  if(r.cr)setV('fcr',r.cr);
+  if(r.cb)document.getElementById('fcb').value=r.cb;
+  if(r.co)document.getElementById('fco').value=r.co;
+}
+function showPR(t,m){var el=document.getElementById('parseResult');if(!el)return;el.style.display='block';el.innerHTML='<div class="'+(t==='ok'?'ok-box':'warn-box')+'">'+m+'</div>';}
+
+// ─── EDIT MODAL ─────────────────────────────────────────────────────────────
+function openEd(id) {
+  var x=LOCAL_VEHICLES.filter(function(v){return v.id===id;})[0];if(!x)return;
+  setV('eid',id);setV('em',x.md||'');setV('ev',x.vr||'');setV('ea',x.an||'');setV('ek',x.km||'');
+  setV('ep',x.pr||'');setV('ec',x.ci||'');setV('ecr',x.cr||'');
+  var ecb=document.getElementById('ecb');if(ecb)ecb.value=x.cb||'';
+  var eco=document.getElementById('eco');if(eco)eco.value=x.co||'';
+  setV('ent',x.nt||'');
+  openM('edM');
+}
+
+// ─── CSV ────────────────────────────────────────────────────────────────────
+function expCSV(){
+  var sc=calcS(LOCAL_VEHICLES.slice()).sort(function(a,b){return(b.score||0)-(a.score||0);});
+  var h=['Rank','NID','Modelo','Motor','Ano','KM','Preco','Cidade','Cor','Status','Score','URL','Notas'];
+  var rows=sc.map(function(x,i){return[i+1,x.nid||'',x.md||'',x.vr||'',x.an||'',x.km||'',x.pr||'',x.ci||'',x.cr||'',x.st||'',x.score||0,x.url||'',x.nt||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});
+  var blob=new Blob(['\uFEFF'+[h.join(',')].concat(rows).join('\n')],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='DCN_'+currentClientId+'.csv';a.click();
+  ntf('CSV exportado!');
+}
+
+// ─── UTILS ──────────────────────────────────────────────────────────────────
+function gv(id){var e=document.getElementById(id);return e?e.value:'';}
+function setV(id,v){var e=document.getElementById(id);if(e)e.value=(v!=null?v:'');}
+function ni(id){return parseInt(gv(id))||null;}
+function updTime(){var n=new Date();var el=document.getElementById('lupd');if(el)el.textContent=n.toLocaleDateString('pt-BR')+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function openM(id){
+  if(id==='addM'){
+    ['fu','fpaste','fm','fv','fa','fk','fp','fc','fcr','fnt'].forEach(function(x){var e=document.getElementById(x);if(e)e.value='';});
+    var cb=document.getElementById('fcb');if(cb)cb.value='';
+    var co=document.getElementById('fco');if(co)co.value='';
+    var pr=document.getElementById('parseResult');if(pr)pr.style.display='none';
+  }
+  var m=document.getElementById(id);if(m)m.style.display='flex';
+}
+function closeM(id){var m=document.getElementById(id);if(m)m.style.display='none';}
+function ntf(msg){document.querySelectorAll('.ntf').forEach(function(x){x.remove();});var n=document.createElement('div');n.className='ntf';n.textContent=msg;document.body.appendChild(n);setTimeout(function(){if(n.parentNode)n.remove();},4000);}
+
+// ─── URL ROUTING ────────────────────────────────────────────────────────────
+function getUrlParam(name) {
+  var params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
+// ─── BOOT ───────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.ovl').forEach(function(m){
+    m.addEventListener('click',function(e){if(e.target===m)m.style.display='none';});
+  });
+  initFirebase();
+});
+
+</script>
+</body>
+</html>
