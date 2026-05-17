@@ -257,7 +257,7 @@ a.lnk:hover{color:var(--blue2);text-decoration:underline}
   <div class="fr"><label class="lb">Link do an&uacute;ncio</label>
     <div style="display:flex;gap:8px"><input type="url" class="fi" id="fu" placeholder="https://www.olx.com.br/..."><button class="bp" onclick="parseURL()" style="white-space:nowrap;flex-shrink:0;font-size:13px">Extrair URL</button></div>
   </div>
-  <div class="fr"><label class="lb">Ou cole o texto do an&uacute;ncio</label>
+  <div class="fr"><label class="lb">Ou  o texto do an&uacute;ncio</label>
     <div style="display:flex;gap:8px;align-items:flex-end">
       <textarea class="pa" id="fpaste" style="flex:1" placeholder="Ctrl+A, Ctrl+C na p&aacute;gina do an&uacute;ncio, Ctrl+V aqui..."></textarea>
       <button class="bp" onclick="parseText()" style="white-space:nowrap;flex-shrink:0;font-size:13px;align-self:flex-end">Extrair Texto</button>
@@ -294,13 +294,7 @@ a.lnk:hover{color:var(--blue2);text-decoration:underline}
 
 <script>
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
+var FIREBASE_CONFIG = {
   apiKey: "AIzaSyCzu21eQaUh8EBFcqNMI9tas3oSoA_MQhs",
   authDomain: "dcn-consultoria.firebaseapp.com",
   databaseURL: "https://dcn-consultoria-default-rtdb.firebaseio.com",
@@ -308,10 +302,6 @@ const firebaseConfig = {
   storageBucket: "dcn-consultoria.firebasestorage.app",
   messagingSenderId: "90870697865",
   appId: "1:90870697865:web:af08444f66f91b4dc79b58"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 };
 
 // ─── ESTADO GLOBAL ─────────────────────────────────────────────────────────
